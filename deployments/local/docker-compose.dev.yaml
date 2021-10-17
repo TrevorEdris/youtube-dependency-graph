@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ${PWD}
+      dockerfile: ./build/docker/dev.Dockerfile
+    container_name: app
+    environment:
+      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+    volumes:
+      - ${PWD}/:/app
+      - type: bind
+        source: /run/host-services/ssh-auth.sock
+        target: /run/host-services/ssh-auth.sock
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    networks:
+      local-network:
+        ipv4_address: 172.10.0.2
+
+networks:
+  local-network:
+    name: "local-network"
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.10.0.0/16
