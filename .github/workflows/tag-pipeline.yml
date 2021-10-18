@@ -17,12 +17,14 @@ jobs:
       - name: Set version
         id: version
         run: |
+          echo "Tag to be created --> $(make version)"
           echo "::set-output name=value::$(make version)"
       - name: Create tag
         uses: simpleactions/create-tag@v1.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           message: ${{ github.ref }} merged and created ${{ steps.version.outputs.value }}
+          tag: ${{ steps.version.outputs.value }}
       - name: Show tag
         run: |
           echo "Created version tag ${{ steps.tag.outputs.ref }}"
