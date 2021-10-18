@@ -19,3 +19,4 @@
 
 # .air.toml files
 tmp/*
+/secrets/dev/api_key
