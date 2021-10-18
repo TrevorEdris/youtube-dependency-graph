@@ -1,19 +1,20 @@
 package scrape
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type Scraper interface {
-    Scrape(ytURL string)
+	Scrape(ytURL string) error
 }
 
 func New() Scraper {
-    return &scraper{}
+	return &scraper{}
 }
 
-type scraper struct {}
+type scraper struct{}
 
-func (s *scraper) Scrape(ytURL string) {
-    fmt.Printf("Scraping %s\n", ytURL)
+func (s *scraper) Scrape(ytURL string) error {
+	fmt.Printf("Scraping %s\n", ytURL)
+	return nil
 }
