@@ -1,9 +1,10 @@
 ## Description
 
+_Explain the purpose of this PR at a high level_
 
 ## Proposed Changes
 
-- 
+- _List the notable changes being made_
 
 ## Checklist
 
