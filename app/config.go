@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"os"
@@ -7,20 +7,24 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+type Config struct {
+	Youtube YoutubeClientConfig
+}
+
 type YoutubeClientConfig struct {
 	APIKey string `envconfig:"API_KEY" required:"true"`
 }
 
-func parseConfig() (YoutubeClientConfig, error) {
+func ParseConfig() (Config, error) {
 	err := godotenv.Load()
 	if err != nil && !os.IsNotExist(err) {
-		return YoutubeClientConfig{}, err
+		return Config{}, err
 	}
 
-	var cfg YoutubeClientConfig
+	var cfg Config
 	err = envconfig.Process("", &cfg)
 	if err != nil {
-		return YoutubeClientConfig{}, err
+		return Config{}, err
 	}
 
 	return cfg, nil
