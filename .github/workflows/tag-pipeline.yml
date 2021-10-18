@@ -1,6 +1,10 @@
 name: Tag on Push to main
 on: 
-  push:
+  workflow_run:
+    workflows:
+      - "Build on PR Push"
+    types:
+      - completed
     branches:
       - main
 jobs:
