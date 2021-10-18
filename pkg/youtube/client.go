@@ -5,15 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"html"
-	"regexp"
 	"strings"
 
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
-)
-
-const (
-	vidIDregex = `(\?v=\S{11}){1}`
 )
 
 var (
@@ -22,7 +17,7 @@ var (
 
 type Client interface {
 	GetVideoByTitle(title string) (Video, error)
-	GetVideoByURL(ytURL string) (Video, error)
+	GetVideoByURL(ytURL Url) (Video, error)
 }
 
 type ytClient struct {
@@ -64,7 +59,7 @@ func (c *ytClient) GetVideoByTitle(title string) (Video, error) {
 	// Track the ID's of the video(s) that match, allowing us to query for
 	// the full info of the video later on
 	matchingVideoID := ""
-	foundExactMatch := false
+	foundMatch := false
 	for _, item := range response.Items {
 
 		// We only care about Videos
@@ -78,14 +73,14 @@ func (c *ytClient) GetVideoByTitle(title string) (Video, error) {
 				fmt.Printf("Found matching video! Title '%s'\n", item.Snippet.Title)
 				matchingVideoID = item.Id.VideoId
 
-				// Once we find an exact match, we don't really care about the rest
+				// Once we find a match, we don't really care about the rest
 				// of the results
-				foundExactMatch = true
+				foundMatch = true
 			} else {
 				fmt.Printf("Query found '%s' but '%s' was not a substring\n", item.Snippet.Title, titleToMatch)
 			}
 		}
-		if foundExactMatch {
+		if foundMatch {
 			break
 		}
 	}
@@ -95,24 +90,13 @@ func (c *ytClient) GetVideoByTitle(title string) (Video, error) {
 	return c.getVideoByID(matchingVideoID)
 }
 
-func (c *ytClient) GetVideoByURL(ytURL string) (Video, error) {
-	// Given "https://www.youtube.com/watch?v=iDIcydiQOhc", extract iDIcydiQOhc
-	// and query yt API for that ID
-	re := regexp.MustCompile(vidIDregex)
-	res := re.FindAllStringSubmatch(ytURL, -1)
-	if len(res) != 1 {
-		return &video{}, fmt.Errorf("ERROR: invalid input string; Unable to parse video ID out of URL; Expected format %s, got result %v", vidIDregex, res)
-	}
-
-	id := res[0][0][3:]
-	fmt.Printf("Parsed id %s out of url %s\n", id, ytURL)
-
-	return c.getVideoByID(id)
+func (c *ytClient) GetVideoByURL(url Url) (Video, error) {
+	return c.getVideoByID(url.GetID())
 }
 
 func (c *ytClient) getVideoByID(id string) (Video, error) {
 	// Query for all the relevant information
-	videoListCall := c.service.Videos.List([]string{"id", "snippet", "statistics", "contentDetails"})
+	videoListCall := c.service.Videos.List([]string{"id", "snippet", "contentDetails", "player"})
 
 	// Get a video by the video ID
 	videoListCall.Id(id)

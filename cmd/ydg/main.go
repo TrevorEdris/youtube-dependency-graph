@@ -8,8 +8,6 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, world!")
-
 	cfg, err := parseConfig()
 	if err != nil {
 		fmt.Printf("ERROR: Unable to parse config: %s\n", err)
@@ -17,10 +15,6 @@ func main() {
 	}
 
 	// TODO: Parse CLI args here using urfave/cli/v2
-	//ytURL := "https://www.youtube.com/watch?v=iDIcydiQOhc"
-	//ytURL := "https://www.youtube.com/watch?v=acnvRrpvwlk"
-	ytURL := "https://www.youtube.com/watch?v=-IfmgyXs7z8asdfasdf"
-	//title := "New Results in Quantum Tunneling vs. The Speed of Light"
 
 	client, err := youtube.NewClient(cfg.APIKey)
 	if err != nil {
@@ -28,12 +22,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	//video, err := client.GetVideoByTitle(title)
-	video, err := client.GetVideoByURL(ytURL)
+	/*
+		title := "New Results in Quantum Tunneling vs. The Speed of Light"
+		video, err := client.GetVideoByTitle(title)
+		if err != nil {
+			fmt.Printf("ERROR: Unable to get video by title: %s\n", err)
+			os.Exit(1)
+		}
+	*/
+
+	//url := "https://www.youtube.com/watch?v=iDIcydiQOhc"
+	//url := "https://www.youtube.com/watch?v=acnvRrpvwlk"
+	url := "https://www.youtube.com/watch?v=-IfmgyXs7z8asdfasdf"
+
+	ytUrl, err := youtube.NewURL(url)
 	if err != nil {
-		fmt.Printf("ERROR: Unable to create client: %s\n", err)
+		fmt.Printf("ERROR: Invalid URL provided: %s\n", err)
+	}
+
+	video, err := client.GetVideoByURL(ytUrl)
+	if err != nil {
+		fmt.Printf("ERROR: Unable to get video by url: %s\n", err)
 		os.Exit(1)
 	}
+
 	fmt.Printf("Video: %s\n", video.GetTitle())
 	video.GetUrlsFromDescription()
 }

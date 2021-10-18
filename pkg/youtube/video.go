@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	urlRegex = `(https?:\/\/(?:www\.|(^www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(^www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})`
+	//urlRegex = `(https?:\/\/(?:www\.|(^www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(^www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})`
+	//urlRegex = `(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+`
+	urlRegex = `(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})?`
 )
 
 type Video interface {
@@ -16,43 +18,8 @@ type Video interface {
 	GetDescription() string
 	GetThumbnailURL() string
 	GetUrlsFromDescription() []string
-	GetYoutubeUrlsFromDescription() []string
 }
 
-/*
-{
-  "kind": "youtube#video",
-  "etag": etag,
-  "id": string,
-  "snippet": {
-    "publishedAt": datetime,
-    "channelId": string,
-    "title": string,
-    "description": string,
-    "thumbnails": {
-      (key): {
-        "url": string,
-        "width": unsigned integer,
-        "height": unsigned integer
-      }
-    },
-    "channelTitle": string,
-    "tags": [
-      string
-    ],
-  },
-  "contentDetails": {
-    "duration": string,
-  },
-  "statistics": {
-    "viewCount": unsigned long,
-    "likeCount": unsigned long,
-    "dislikeCount": unsigned long,
-    "favoriteCount": unsigned long,
-    "commentCount": unsigned long
-  }
-}
-*/
 type video struct {
 	// Embed the youtube.Video type in our custom video type
 	youtube.Video
@@ -84,6 +51,10 @@ func newVideo(vid *youtube.Video) Video {
 	return v
 }
 
+func (v *video) GetID() string {
+	return v.Id
+}
+
 func (v *video) GetTitle() string {
 	return v.Snippet.Title
 }
@@ -101,27 +72,34 @@ func (v *video) GetUrlsFromDescription() []string {
 	res := re.FindAllStringSubmatch(v.Snippet.Description, -1)
 	urls := []string{}
 	for _, matchGroup := range res {
-		for _, match := range matchGroup {
+		if len(matchGroup) == 0 {
+			continue
+		}
 
-			// Skip empty matches
-			if match == "" {
-				continue
-			}
+		// The first match in the regex matches the most subgroups
+		match := matchGroup[0]
 
-			// Only track unique matches
-			if !contains(urls, match) {
-				fmt.Printf("Found url: %s\n", match)
-				urls = append(urls, match)
-			}
+		// Skip empty matches
+		if match == "" {
+			continue
+		}
+
+		// Only track unique matches
+		if !contains(urls, match) {
+			fmt.Printf("Found url: %s\n", match)
+			urls = append(urls, match)
 		}
 	}
 	return urls
 }
 
-func (v *video) GetYoutubeUrlsFromDescription() []string {
-	urls := v.GetUrlsFromDescription()
-	// TODO: Filter out non-youtube URLs
-	return urls
+func (v *video) GetEmbedHTML() string {
+	return v.Player.EmbedHtml
+}
+
+// https://en.wikipedia.org/wiki/ISO_8601#Durations
+func (v *video) GetDuration() string {
+	return v.ContentDetails.Duration
 }
 
 func contains(someList []string, someElement string) bool {
