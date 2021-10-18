@@ -1,0 +1,26 @@
+name: Tag on Push to main
+on: 
+  workflow_run:
+    workflows:
+      - "Build on PR Push"
+    types:
+      - completed
+    branches:
+      - main
+jobs:
+  Tag:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Checking out branch ${{ github.ref }}"
+      - name: Set version
+        id: version
+        run: |
+          echo "::set-output name=value::$(make version)"
+      - name: Create tag
+        uses: simpleactions/create-tag@v1.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          message: ${{ github.ref }} merged and created ${{ steps.version.outputs.value }}
+      - name: Show tag
+        run: |
+          echo "Created version tag ${{ steps.tag.outputs.ref }}"

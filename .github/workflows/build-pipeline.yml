@@ -1,0 +1,13 @@
+name: Build on PR Push
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Checking out branch ${{ github.ref }}"
+      - name: Checkout branch
+        uses: actions/checkout@v2
+      - name: Build
+        run: |
+          make build
+      - run: echo "Status --> ${{ job.status }}"
