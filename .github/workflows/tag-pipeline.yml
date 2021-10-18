@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Checking out branch ${{ github.ref }}"
+      - name: Checkout branch
+        uses: actions/checkout@v2
       - name: Set version
         id: version
         run: |
