@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  bin = "./tmp/ydg"
+  bin = "./tmp/ydg from-url --url=https://www.youtube.com/watch?v=iDIcydiQOhc"
   cmd = "go build -o ./tmp/ydg cmd/ydg/*.go"
   delay = 1000
   exclude_dir = ["assets", "tmp"]
