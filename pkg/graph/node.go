@@ -7,31 +7,65 @@ import (
 )
 
 type Node interface {
-	ID() string
+	GetID() string
+	GetLabel() string
 	GetChildren() []Node
 	AddChild(c Node)
 	String() string
+	ToJSON() string
+	ToCustomJSON() string
 }
 
+// Adhere to jsongraphformatv2
+// https://jsongraphformat.info/v2.0/json-graph-schema.json
+/*
+{
+    "label": "Descriptive Label Here",
+    "metadata": {
+        "id": "unique_node_id"
+    }
+}
+*/
 type node struct {
-	id       string
-	children map[string]Node
+	Label    string          `json:"label"`
+	ID       string          `json:"id"`
+	Metadata nodeMetadata    `json:"metadata"`
+	children map[string]Node // Deprecated: Parent graph structure tracks edges
 }
 
-func NewNode(id string) (Node, error) {
+type nodeCustomJSON struct {
+	Label string `json:"label"`
+	ID    string `json:"id"`
+}
+
+type nodeMetadata struct {
+	ID string `json:"id"`
+}
+
+func NewNode(id string, label string) (Node, error) {
 	if strings.TrimSpace(id) == "" {
 		return &node{}, fmt.Errorf("node ID cannot be empty")
 	}
+	if strings.TrimSpace(label) == "" {
+		return &node{}, fmt.Errorf("node label cannot be empty")
+	}
 	return &node{
-		id:       id,
+		ID:       id,
+		Metadata: nodeMetadata{ID: id},
+		Label:    label,
 		children: map[string]Node{},
 	}, nil
 }
 
-func (n *node) ID() string {
-	return n.id
+func (n *node) GetID() string {
+	return n.Metadata.ID
 }
 
+func (n *node) GetLabel() string {
+	return n.Label
+}
+
+// Deprecated: Use graph structure to track edges.
 func (n *node) GetChildren() []Node {
 	children := make([]Node, len(n.children))
 	for _, child := range n.children {
@@ -42,8 +76,8 @@ func (n *node) GetChildren() []Node {
 
 func (n *node) AddChild(c Node) {
 	// Don't double-insert nodes
-	if _, exists := n.children[c.ID()]; !exists {
-		n.children[c.ID()] = c
+	if _, exists := n.children[c.GetID()]; !exists {
+		n.children[c.GetID()] = c
 	}
 }
 
@@ -58,7 +92,25 @@ func (n *node) String() string {
 		childIDs = append(childIDs, childID)
 	}
 	repr := make(map[string][]string)
-	repr[n.ID()] = childIDs
+	repr[n.GetID()] = childIDs
 	b, _ := json.Marshal(repr)
+	return string(b)
+}
+
+func (n *node) ToJSON() string {
+	b, _ := json.Marshal(n)
+	return string(b)
+}
+
+func (n *node) ToCustomJSON() string {
+	nc := &nodeCustomJSON{
+		ID:    n.Metadata.ID,
+		Label: n.Label,
+	}
+	return nc.ToJSON()
+}
+
+func (nc *nodeCustomJSON) ToJSON() string {
+	b, _ := json.Marshal(nc)
 	return string(b)
 }
