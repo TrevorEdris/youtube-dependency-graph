@@ -13,7 +13,6 @@ type Graph interface {
 	AddNode(n Node)
 	AddEdge(parent Node, child Node, relation string)
 	GetNodeByID(id string) (Node, error)
-	String() string
 	ToJSON() string
 	ToCustomJSON() string
 }
@@ -70,6 +69,7 @@ type graphCustomJSON struct {
 	Edges []Edge `json:"edges"`
 }
 
+// NewGraph creates an instance of graph, which implements the Graph interface.
 func NewGraph(id, label, graphType string) Graph {
 	if strings.TrimSpace(id) == "" {
 		id = uuid.New().String()
@@ -90,10 +90,12 @@ func NewGraph(id, label, graphType string) Graph {
 	}
 }
 
+// GetID returns the ID of the graph.
 func (g *graph) GetID() string {
-	return g.String() // lol
+	return g.ID
 }
 
+// AddNode adds Node n to the graph if it is not already in the graph.
 func (g *graph) AddNode(n Node) {
 	// Don't double-add nodes
 	if _, exists := g.Nodes[n.GetID()]; !exists {
@@ -101,6 +103,8 @@ func (g *graph) AddNode(n Node) {
 	}
 }
 
+// AddEdge adds a directed edge between Node parent and Node child, labeling it with the given relation.
+// If (parent|child) do not exist in the graph yet, they will be added.
 func (g *graph) AddEdge(parent Node, child Node, relation string) {
 	// No-op if the graph already contains this edge
 	if g.containsEdge(parent, child) {
@@ -109,6 +113,7 @@ func (g *graph) AddEdge(parent Node, child Node, relation string) {
 
 	// If the graph doesn't have the edge, ensure that the parent/child nodes
 	// exist in the graph (adding them if either doesn't exist yet)
+	// TODO: Use g.AddNode(...) here?
 	if _, ok := g.Nodes[parent.GetID()]; !ok {
 		g.Nodes[parent.GetID()] = parent
 	}
@@ -125,6 +130,7 @@ func (g *graph) AddEdge(parent Node, child Node, relation string) {
 	g.Edges = append(g.Edges, e)
 }
 
+// GetNodeByID returns the Node whose ID is equivalent to the given id, or nil.
 func (g *graph) GetNodeByID(id string) (Node, error) {
 	n, ok := g.Nodes[id]
 	if !ok {
@@ -133,40 +139,32 @@ func (g *graph) GetNodeByID(id string) (Node, error) {
 	return n, nil
 }
 
-/*
-[
-    {
-        "id0": ["id1", "id2", "id3"]
-    },
-    {
-        "id1": ["id2", "id3"]
-    },
-    {
-        "id2": ["id4"]
-    },
-    {
-        "id3": ["id4"]
-    },
-    {
-        "id4": []
-    }
-]
-*/
-// Deprecated: String() is deprecated. Use ToJSON() instead.
-func (g *graph) String() string {
-	repr := []string{}
-	for _, n := range g.Nodes {
-		repr = append(repr, n.String())
-	}
-	s := fmt.Sprintf("[%s]", strings.Join(repr, ","))
-	return s
-}
-
+// ToJSON returns a string representation of the graph, following the json graph schema v2.
 func (g *graph) ToJSON() string {
 	b, _ := json.Marshal(g)
 	return string(b)
 }
 
+/* ToCustomJSON returns a string representation of the graph, following a format similar to
+json graph schema v2, however rather than
+{
+    "nodes": {
+        "node_ID": {
+            <node_details>
+        }
+    }
+}
+
+the format is
+
+{
+    "nodes": [
+        {
+            <node_details>
+        }
+    ]
+}
+*/
 func (g *graph) ToCustomJSON() string {
 	gc := &graphCustomJSON{
 		ID:    g.ID,
@@ -182,11 +180,14 @@ func (g *graph) ToCustomJSON() string {
 	return gc.ToJSON()
 }
 
+// ToJSON returns a string representation of a graphCustomJSON struct. Refer to the comment on
+// ToCustomJSON for an example of the format.
 func (gc *graphCustomJSON) ToJSON() string {
 	b, _ := json.Marshal(gc)
 	return string(b)
 }
 
+// containsEdge returns a bool, indicating if a directed edge between Node parent and Node child exists.
 func (g *graph) containsEdge(parent Node, child Node) bool {
 	for _, e := range g.Edges {
 		if e.GetSource() == parent.GetID() && e.GetTarget() == child.GetID() {
