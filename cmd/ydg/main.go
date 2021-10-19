@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/inconshreveable/log15"
 	"github.com/urfave/cli/v2"
@@ -35,14 +36,14 @@ func getVersion() string {
 }
 
 func initLogging(logLevel, logFmt string) {
-	lvl, err := log15.LvlFromString(logLevel)
+	lvl, err := log15.LvlFromString(strings.ToLower(strings.TrimSpace(logLevel)))
 	if err != nil {
 		log.Warn("Invalid LOG_LEVEL specified, defaulting to info", "error", err)
 		lvl = log15.LvlInfo
 	}
 
 	var loggerFormat log15.Format
-	switch logFmt {
+	switch strings.ToLower(strings.TrimSpace(logFmt)) {
 	case "logfmt":
 		loggerFormat = log15.LogfmtFormat()
 	case "jsonfmt":
