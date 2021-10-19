@@ -18,7 +18,8 @@ var (
 
 type Client interface {
 	GetVideoByTitle(title string) (Video, error)
-	GetVideoByURL(ytURL Url) (Video, error)
+	GetVideoByURL(rawURL string) (Video, error)
+	GetVideoByID(id string) (Video, error)
 }
 
 type ytClient struct {
@@ -88,19 +89,31 @@ func (c *ytClient) GetVideoByTitle(title string) (Video, error) {
 		}
 	}
 
-	return c.getVideoByID(matchingVideoID)
+	return c.GetVideoByID(matchingVideoID)
 }
 
-func (c *ytClient) GetVideoByURL(url Url) (Video, error) {
-	return c.getVideoByID(url.GetID())
+func (c *ytClient) GetVideoByURL(rawURL string) (Video, error) {
+	url, err := NewURL(rawURL)
+	if err != nil {
+		return &video{}, fmt.Errorf("unable to create new URL from raw url %s: %s", rawURL, err)
+	}
+	return c.getVideo(url)
 }
 
-func (c *ytClient) getVideoByID(id string) (Video, error) {
+func (c *ytClient) GetVideoByID(id string) (Video, error) {
+	url, err := NewURL(id)
+	if err != nil {
+		return &video{}, fmt.Errorf("unable to create new URL from video id %s: %s", id, err)
+	}
+	return c.getVideo(url)
+}
+
+func (c *ytClient) getVideo(url Url) (Video, error) {
 	// Query for all the relevant information
 	videoListCall := c.service.Videos.List([]string{"id", "snippet", "contentDetails", "player"})
 
 	// Get a video by the video ID
-	videoListCall.Id(id)
+	videoListCall.Id(url.GetID())
 	response, err := videoListCall.Do()
 	if err != nil {
 		return &video{}, fmt.Errorf("unable to perform video list by id: %s", err)
@@ -108,9 +121,9 @@ func (c *ytClient) getVideoByID(id string) (Video, error) {
 
 	// We expect this ID to be unique, meaning only 0 or 1 result should be returned
 	if len(response.Items) < 1 {
-		return &video{}, fmt.Errorf("no videos found with id=%s", id)
+		return &video{}, fmt.Errorf("no videos found with origin=%s id=%s", url.GetOrigin(), url.GetID())
 	} else if len(response.Items) > 1 {
-		return &video{}, fmt.Errorf("too many videos found (%d) with id=%s", len(response.Items), id)
+		return &video{}, fmt.Errorf("too many videos found (%d) with origin=%s id=%s", len(response.Items), url.GetOrigin(), url.GetID())
 	}
 
 	return newVideo(response.Items[0]), nil

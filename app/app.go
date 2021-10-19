@@ -39,16 +39,11 @@ func New(cfg Config, log log15.Logger) (App, error) {
 func (a *app) Run() error {
 	// TODO: Parse CLI args using urfave/cli/v2
 
-	//url := "https://www.youtube.com/watch?v=iDIcydiQOhc"
+	url := "https://www.youtube.com/watch?v=iDIcydiQOhc"
 	//url := "https://www.youtube.com/watch?v=acnvRrpvwlk"
-	url := "https://www.youtube.com/watch?v=-IfmgyXs7z8asdfasdf"
+	//url := "https://www.youtube.com/watch?v=-IfmgyXs7z8asdfasdf"
 
-	ytUrl, err := youtube.NewURL(url)
-	if err != nil {
-		return err
-	}
-
-	video, err := a.client.GetVideoByURL(ytUrl)
+	video, err := a.client.GetVideoByURL(url)
 	if err != nil {
 		return err
 	}
@@ -100,17 +95,10 @@ func (a *app) getReferences(g graph.Graph, video youtube.Video, currentDepth int
 	// For each of the URLs in the description
 	for _, url := range urls {
 
-		// Create a properly formatted URL from it
-		ytUrl, err := youtube.NewURL(url)
-		if err != nil {
-			a.log.Warn("Unable to create URL", "input", url, "error", err)
-			continue
-		}
-
 		// Get the Video that the URL is referencing
-		referencedVideo, err := a.client.GetVideoByURL(ytUrl)
+		referencedVideo, err := a.client.GetVideoByURL(url)
 		if err != nil {
-			a.log.Warn("Unable to get video", "input", ytUrl.GetID(), "error", err)
+			a.log.Warn("Unable to get video", "input", url, "error", err)
 			continue
 		}
 
