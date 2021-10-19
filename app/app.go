@@ -9,12 +9,10 @@ import (
 	"github.com/TrevorEdris/youtube-dependency-graph/pkg/youtube"
 )
 
-const (
-	maxDepth = 3
-)
-
 type App interface {
-	Run() error
+	GraphFromURL(url string) error
+	GraphFromTitle(title string) error
+	GraphFromID(id string) error
 }
 
 type app struct {
@@ -36,19 +34,35 @@ func New(cfg Config, log log15.Logger) (App, error) {
 	}, nil
 }
 
-func (a *app) Run() error {
-	// TODO: Parse CLI args using urfave/cli/v2
-
-	url := "https://www.youtube.com/watch?v=iDIcydiQOhc"
-	//url := "https://www.youtube.com/watch?v=acnvRrpvwlk"
-	//url := "https://www.youtube.com/watch?v=-IfmgyXs7z8asdfasdf"
-
+func (a *app) GraphFromURL(url string) error {
 	video, err := a.client.GetVideoByURL(url)
 	if err != nil {
 		return err
 	}
 
-	a.log.Info("Video", "title", video.GetTitle(), "channel", video.GetChannelTitle())
+	return a.graphFromVideo(video)
+}
+
+func (a *app) GraphFromTitle(title string) error {
+	video, err := a.client.GetVideoByTitle(title)
+	if err != nil {
+		return err
+	}
+
+	return a.graphFromVideo(video)
+}
+
+func (a *app) GraphFromID(id string) error {
+	video, err := a.client.GetVideoByID(id)
+	if err != nil {
+		return err
+	}
+
+	return a.graphFromVideo(video)
+}
+
+func (a *app) graphFromVideo(video youtube.Video) error {
+	a.log.Info("Generating graph for Video", "title", video.GetTitle(), "channel", video.GetChannelTitle())
 
 	// Create a new graph, letting it create a unique ID for the graph
 	g := graph.NewGraph("", "Youtube Video Dependencies", "ydg")
@@ -57,23 +71,23 @@ func (a *app) Run() error {
 	if err != nil {
 		return err
 	}
-	a.log.Info("Recursion completed")
+	a.log.Debug("Recursion completed")
 
 	for _, vid := range refs {
 		if vid == nil {
 			continue
 		}
-		a.log.Info("Video Reference", "title", vid.GetTitle(), "channel", vid.GetChannelTitle())
+		a.log.Debug("Video Reference", "title", vid.GetTitle(), "channel", vid.GetChannelTitle())
 	}
 
-	fmt.Printf("Graph output:\n%s\n", g.ToCustomJSON())
+	fmt.Println(g.ToCustomJSON())
 
 	return nil
 }
 
 func (a *app) getReferences(g graph.Graph, video youtube.Video, currentDepth int) ([]youtube.Video, error) {
-	a.log.Info(fmt.Sprintf("======================[ %s, %s, %d ]======================", video.GetID(), video.GetChannelID(), currentDepth))
-	a.log.Info("Base video", "title", video.GetTitle(), "channel", video.GetChannelTitle())
+	a.log.Debug(fmt.Sprintf("======================[ %s, %s, %d ]======================", video.GetID(), video.GetChannelID(), currentDepth))
+	a.log.Debug("Base video", "title", video.GetTitle(), "channel", video.GetChannelTitle())
 
 	parentNode, err := graph.NewNode(video.GetID(), video.GetTitle())
 	if err != nil {
@@ -83,7 +97,7 @@ func (a *app) getReferences(g graph.Graph, video youtube.Video, currentDepth int
 
 	// TODO: Does this need to be the very top of the function?
 	// Stop recursion once we reach the maximum recursion depth
-	if currentDepth > maxDepth {
+	if currentDepth > a.cfg.Graph.MaxDepth {
 		return []youtube.Video{}, nil
 	}
 
@@ -109,7 +123,7 @@ func (a *app) getReferences(g graph.Graph, video youtube.Video, currentDepth int
 		}
 
 		g.AddEdge(parentNode, childNode, "references_via_description")
-		a.log.Info("Video reference", "title", referencedVideo.GetTitle(), "url", url, "channel", video.GetChannelTitle())
+		a.log.Debug("Video reference", "title", referencedVideo.GetTitle(), "url", url, "channel", video.GetChannelTitle())
 
 		// Get all the URLs in the referenced video's description
 		childVids, err := a.getReferences(g, referencedVideo, currentDepth+1)
