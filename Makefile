@@ -73,7 +73,7 @@ logs: ## Print logs in stdout
 .PHONY: build
 build: submodules version ## Build and tag the docker container for the API
 	@docker build -f build/docker/Dockerfile -t ${IMAGEORG}/${IMAGE}-build:${VERSION} --target builder .
-	@docker tag ${IMAGEORG}/${IMAGE}:${VERSION} ${IMAGEORG}/${IMAGE}-build:latest
+	@docker tag ${IMAGEORG}/${IMAGE}-build:${VERSION} ${IMAGEORG}/${IMAGE}-build:latest
 
 # -----------------------------[ Test ]------------------------------
 
