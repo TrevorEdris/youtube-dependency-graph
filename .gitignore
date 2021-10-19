@@ -21,3 +21,6 @@
 tmp/*
 /secrets/dev/api_key
 .env
+
+# WSL resource files
+*:Zone.Identifier*
