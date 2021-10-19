@@ -1,11 +1,14 @@
 package graph
 
 import (
-	"encoding/json"
 	"fmt"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
 type Graph interface {
+	GetID() string
 	AddNode(n Node)
 	AddEdge(parent Node, child Node)
 	GetNodeByID(id string) (Node, error)
@@ -13,11 +16,26 @@ type Graph interface {
 }
 
 type graph struct {
+	id    string
 	nodes map[string]Node
 }
 
+func NewGraph() Graph {
+	return &graph{
+		id:    uuid.New().String(),
+		nodes: map[string]Node{},
+	}
+}
+
+func (g *graph) GetID() string {
+	return g.String() // lol
+}
+
 func (g *graph) AddNode(n Node) {
-	g.nodes[n.ID()] = n
+	// Don't double-add nodes
+	if _, exists := g.nodes[n.ID()]; !exists {
+		g.nodes[n.ID()] = n
+	}
 }
 
 func (g *graph) AddEdge(parent Node, child Node) {
@@ -59,10 +77,10 @@ func (g *graph) GetNodeByID(id string) (Node, error) {
 ]
 */
 func (g *graph) String() string {
-	repr := make([]string, len(g.nodes))
+	repr := []string{}
 	for _, n := range g.nodes {
 		repr = append(repr, n.String())
 	}
-	b, _ := json.Marshal(repr)
-	return string(b)
+	s := fmt.Sprintf("[%s]", strings.Join(repr, ","))
+	return s
 }

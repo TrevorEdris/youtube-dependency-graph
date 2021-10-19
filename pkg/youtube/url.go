@@ -28,7 +28,7 @@ func NewURL(ytURL string) (Url, error) {
 	}
 
 	id := res[0][0][3:]
-	fmt.Printf("Parsed id %s out of url %s\n", id, ytURL)
+	//fmt.Printf("Parsed id %s out of url %s\n", id, ytURL)
 
 	return &url{
 		origin: ytURL,

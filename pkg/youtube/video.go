@@ -1,8 +1,8 @@
 package youtube
 
 import (
-	"fmt"
 	"regexp"
+	"strings"
 
 	"google.golang.org/api/youtube/v3"
 )
@@ -14,10 +14,13 @@ const (
 )
 
 type Video interface {
+	GetID() string
 	GetTitle() string
 	GetDescription() string
 	GetThumbnailURL() string
 	GetUrlsFromDescription() []string
+	GetChannelID() string
+	GetChannelTitle() string
 }
 
 type video struct {
@@ -52,19 +55,19 @@ func newVideo(vid *youtube.Video) Video {
 }
 
 func (v *video) GetID() string {
-	return v.Id
+	return strings.TrimSpace(v.Id)
 }
 
 func (v *video) GetTitle() string {
-	return v.Snippet.Title
+	return strings.TrimSpace(v.Snippet.Title)
 }
 
 func (v *video) GetDescription() string {
-	return v.Snippet.Description
+	return strings.TrimSpace(v.Snippet.Description)
 }
 
 func (v *video) GetThumbnailURL() string {
-	return v.Snippet.Thumbnails.Maxres.Url
+	return strings.TrimSpace(v.Snippet.Thumbnails.Maxres.Url)
 }
 
 func (v *video) GetUrlsFromDescription() []string {
@@ -77,7 +80,7 @@ func (v *video) GetUrlsFromDescription() []string {
 		}
 
 		// The first match in the regex matches the most subgroups
-		match := matchGroup[0]
+		match := strings.TrimSpace(matchGroup[0])
 
 		// Skip empty matches
 		if match == "" {
@@ -86,7 +89,7 @@ func (v *video) GetUrlsFromDescription() []string {
 
 		// Only track unique matches
 		if !contains(urls, match) {
-			fmt.Printf("Found url: %s\n", match)
+			//fmt.Printf("Found url: %s\n", match)
 			urls = append(urls, match)
 		}
 	}
@@ -100,6 +103,14 @@ func (v *video) GetEmbedHTML() string {
 // https://en.wikipedia.org/wiki/ISO_8601#Durations
 func (v *video) GetDuration() string {
 	return v.ContentDetails.Duration
+}
+
+func (v *video) GetChannelTitle() string {
+	return v.Snippet.ChannelTitle
+}
+
+func (v *video) GetChannelID() string {
+	return v.Snippet.ChannelId
 }
 
 func contains(someList []string, someElement string) bool {

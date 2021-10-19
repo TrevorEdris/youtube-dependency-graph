@@ -3,6 +3,7 @@ package graph
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type Node interface {
@@ -18,11 +19,12 @@ type node struct {
 }
 
 func NewNode(id string) (Node, error) {
-	if id == "" {
+	if strings.TrimSpace(id) == "" {
 		return &node{}, fmt.Errorf("node ID cannot be empty")
 	}
 	return &node{
-		id: id,
+		id:       id,
+		children: map[string]Node{},
 	}, nil
 }
 
@@ -39,7 +41,10 @@ func (n *node) GetChildren() []Node {
 }
 
 func (n *node) AddChild(c Node) {
-	n.children[c.ID()] = c
+	// Don't double-insert nodes
+	if _, exists := n.children[c.ID()]; !exists {
+		n.children[c.ID()] = c
+	}
 }
 
 func (n *node) String() string {
@@ -48,7 +53,7 @@ func (n *node) String() string {
 		    "ParentID": ["id0", "id1", "id2"]
 		}
 	*/
-	childIDs := make([]string, len(n.children))
+	childIDs := []string{}
 	for childID, _ := range n.children {
 		childIDs = append(childIDs, childID)
 	}

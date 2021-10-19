@@ -7,6 +7,7 @@ import (
 	"html"
 	"strings"
 
+	"github.com/inconshreveable/log15"
 	"google.golang.org/api/option"
 	"google.golang.org/api/youtube/v3"
 )
@@ -23,9 +24,10 @@ type Client interface {
 type ytClient struct {
 	apiKey  string
 	service *youtube.Service
+	log     log15.Logger
 }
 
-func NewClient(apiKey string) (Client, error) {
+func NewClient(apiKey string, log log15.Logger) (Client, error) {
 	if apiKey == "" {
 		return &ytClient{}, fmt.Errorf("provided api key is empty")
 	}
@@ -38,6 +40,7 @@ func NewClient(apiKey string) (Client, error) {
 	return &ytClient{
 		apiKey:  apiKey,
 		service: service,
+		log:     log,
 	}, nil
 }
 
@@ -70,14 +73,14 @@ func (c *ytClient) GetVideoByTitle(title string) (Video, error) {
 			// then we treat that as a match.
 			// TODO: Perform some input validation on the input value for title
 			if strings.Contains(item.Snippet.Title, titleToMatch) {
-				fmt.Printf("Found matching video! Title '%s'\n", item.Snippet.Title)
+				c.log.Debug("Found matching video", "title", item.Snippet.Title)
 				matchingVideoID = item.Id.VideoId
 
 				// Once we find a match, we don't really care about the rest
 				// of the results
 				foundMatch = true
 			} else {
-				fmt.Printf("Query found '%s' but '%s' was not a substring\n", item.Snippet.Title, titleToMatch)
+				c.log.Info(fmt.Sprintf("Query found '%s' but '%s' was not a substring", item.Snippet.Title, titleToMatch))
 			}
 		}
 		if foundMatch {
@@ -85,8 +88,6 @@ func (c *ytClient) GetVideoByTitle(title string) (Video, error) {
 		}
 	}
 
-	// TODO: Query for the full snippet of the video ID
-	fmt.Printf("Video ID: %s\n", matchingVideoID)
 	return c.getVideoByID(matchingVideoID)
 }
 
@@ -111,8 +112,6 @@ func (c *ytClient) getVideoByID(id string) (Video, error) {
 	} else if len(response.Items) > 1 {
 		return &video{}, fmt.Errorf("too many videos found (%d) with id=%s", len(response.Items), id)
 	}
-
-	fmt.Printf("Thumbnail: %s\n", response.Items[0].Snippet.Thumbnails.Maxres.Url)
 
 	return newVideo(response.Items[0]), nil
 }
