@@ -154,7 +154,7 @@ As can be seen above, the `-build` image is `626MB`, but the finalized version i
 
 The following is a list of available environment variables
 
-* `API_KEY` (string, required) - Your Google Developer API Key
+* `API_KEY` (string, required) - Your Google Developer API Key (Must be able to access [Youtube v3 API](https://developers.google.com/youtube/v3/getting-started))
 * `LOG_LEVEL` (string, `info`) - The log level to use (`dbug`, `info`, `warn`, `eror`)
 * `LOG_FMT` (string, `terminalfmt`) - The log output format (`jsonfmt`, `logfmt`, `terminalfmt`)
 * `MAX_DEPTH` (int, `3`) - The maximum recursion depth to search (maximum: `10`)
