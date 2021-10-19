@@ -1,6 +1,6 @@
 FROM golang:1.17-alpine as builder
 
-RUN apk update && apk add musl-dev gcc build-base
+RUN apk update && apk add musl-dev gcc build-base ca-certificates
 
 WORKDIR /go/src/github.com/TrevorEdris/youtube-dependency-graph
 
@@ -13,4 +13,5 @@ RUN go build -ldflags "-linkmode external -extldflags \"-static\" -s -w $LDFLAGS
 FROM scratch AS final
 
 ENTRYPOINT ["/ydg"]
+COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 COPY --from=builder /go/src/github.com/TrevorEdris/youtube-dependency-graph/ydg /ydg
