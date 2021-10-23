@@ -92,6 +92,8 @@ However if we increase the `MAX_DEPTH` from 1 to 6, we see a much more interesti
 
 In the future, the goal is to implement a full working front-end alongside this tool, allowing for custom rendering of each node, where each node will be rendered as the Thumbnail of the video.
 
+![ydg_webpage_mockup](./resources/ydg_webpage_mockup.png)
+
 ## Build
 
 ### Requirements
