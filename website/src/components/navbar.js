@@ -3,7 +3,7 @@ import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 
 function YDGNavbar() {
 	return (
-		<Navbar bg="dark" variant="dark" expand="xxl">
+		<Navbar bg="dark" variant="dark" expand="lg">
 			<Container>
 				<Navbar.Brand href="#home">
 					{' '}

@@ -1,22 +1,25 @@
-import logo from './logo.svg';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import YDGNavbar from './components/navbar';
+import GraphPane from './components/graph_pane';
 
+// https://www.codeply.com/go/Iyjsd8djnz
 function App() {
 	return (
-		<div className="App">
-			<YDGNavbar />
-			<header className="App-header">
-				<img src={logo} className="App-logo" alt="logo" />
-				<p>
-					Edit <code>src/App.js</code> and save to reload.
-				</p>
-				<a className="App-link" href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-					Learn React
-				</a>
-			</header>
+		<div className="App container-fluid vh-100">
+			<div className="row justify-content-center h-100">
+				<div className="col">
+					<div className="h-100 d-flex flex-column">
+						<div className="row">
+							<YDGNavbar />
+						</div>
+						<div className="row border border-dark flex-grow-1">
+							<GraphPane />
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 }
