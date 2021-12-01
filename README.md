@@ -30,7 +30,7 @@ From the above description, only the link `https://youtu.be/-IfmgyXs7z8` would b
 
 **Output**
 
-The output format is JSON, following the [JSON Grpah Format (JFG) v2](https://jsongraphformat.info/).
+The output format is JSON, following the [JSON Graph Format (JFG) v2](https://jsongraphformat.info/).
 By following this format (with an additional `id` field in the nodes), we can easily visualize the graph using tools such as [https://grafify.herokuapp.com/](https://grafify.herokuapp.com/).
 
 ```json
